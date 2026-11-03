@@ -1,4 +1,4 @@
-function App() {
+function Welcome() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950">
       <h1 className="text-4xl font-bold text-emerald-400">
@@ -8,4 +8,4 @@ function App() {
   )
 }
 
-export default App
+export default Welcome

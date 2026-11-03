@@ -55,18 +55,25 @@ Ainda não há uma suíte de testes automatizados configurada.
 
 ```text
 src/
-  App.tsx       # Componente raiz e tela temporária
+  app.tsx       # Componente raiz que renderiza a página atual
   index.css     # Entrada do Tailwind CSS
   main.tsx      # Inicialização do React com StrictMode
+  pages/
+    welcome.tsx # Tela temporária existente de teste do Tailwind
 index.html      # Documento HTML em português do Brasil
 vite.config.ts  # Plugins React e Tailwind
 tsconfig*.json  # Configuração TypeScript do frontend e do Vite
 .oxlintrc.json  # Regras de lint
 ```
 
-Pastas para páginas, componentes, serviços e outras responsabilidades serão
-criadas conforme as funcionalidades precisarem delas, sem arquivos vazios ou
-abstrações antecipadas.
+Os arquivos e pastas usam nomes em minúsculas; os componentes React mantêm
+nomes em PascalCase, como `App` e `Welcome`.
+
+`pages/` contém as telas da aplicação. As pastas `components/`, `layouts/`,
+`services/`, `hooks/`, `types/` e `utils/` serão criadas quando houver,
+respectivamente, elementos reutilizáveis, estruturas compartilhadas de tela,
+comunicação com serviços, hooks próprios, tipos compartilhados e funções
+utilitárias. Nenhuma delas é necessária nesta etapa.
 
 ## Configuração e segurança
 
