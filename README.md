@@ -1,93 +1,134 @@
 ﻿# Rastro
 
-Aplicativo de controle financeiro pessoal, com foco em uma experiência simples,
-responsiva e adequada ao iPhone.
+Controle financeiro pessoal em React, TypeScript estrito, Vite, Tailwind CSS e Supabase.
 
-## Estado atual
+A preparação local para a versão 1.0 foi revisada em **16/11/2026**. A publicação
+continua condicionada às verificações de segurança e ambiente registradas no
+[relatório de auditoria](docs/auditoria-v1.md). Nenhum deploy foi realizado.
 
-Fundação do frontend configurada com React, TypeScript, Vite, Tailwind CSS 4 e
-Oxlint. A tela atual é apenas um teste do Tailwind; suas cores não representam a
-identidade visual definitiva.
+## Funcionalidades atuais
 
-Autenticação, integração com Supabase, dashboard, transações e investimentos
-ainda não foram implementados no frontend. O projeto Supabase existente deverá
-ser inspecionado antes de qualquer integração, sem presumir seu esquema ou
-recriar tabelas e políticas.
+- Cadastro com confirmação por e-mail, login, sessão validada no servidor e logout local.
+- Transações: criar, consultar, editar e excluir com confirmação; pesquisa literal,
+  filtros, paginação e totais de todo o período.
+- Categorias globais protegidas e gerenciamento de categorias particulares.
+- Dashboard mensal com receitas, despesas, resultado, gráficos e estados de carregamento,
+  erro e vazio. O resultado do mês não representa saldo bancário.
+- Total de investimentos informado pelo usuário e persistido em `investment_totals`,
+  separado das receitas/despesas e do futuro módulo de carteira.
+- Navegação mobile, formulários acessíveis e recuperação de falhas inesperadas.
 
-## Desenvolvimento local
+## Executar localmente
 
-O Vite instalado exige Node.js `^20.19.0 || >=22.12.0`, além do npm.
-Esta etapa foi validada com Node.js 24.14.1 e npm 11.11.0.
-
-Em uma nova cópia do projeto, instale as versões do arquivo de lock:
+Use **Node.js 24.x** e as versões do `package-lock.json`.
 
 ```sh
 npm ci
 ```
 
-Se as dependências já estiverem instaladas, inicie diretamente:
+Copie `.env.example` para `.env.local` e preencha somente:
+
+```dotenv
+VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=SUA-CHAVE-PUBLICA
+```
+
+A URL deve ser a base HTTPS do projeto. HTTP só é aceito em localhost para
+Supabase local. A chave deve ser `sb_publishable_...` ou JWT legado com papel
+`anon`. As variáveis `VITE_` ficam públicas no JavaScript; nunca use chave secreta,
+`service_role`, senha de banco ou token de usuário. O build rejeita configuração
+ausente, chave incompatível e URL insegura, sem imprimir valores.
 
 ```sh
 npm run dev
 ```
 
-Use o endereço informado pelo Vite no terminal.
+Reinicie o Vite depois de alterar o ambiente. Não versione `.env.local`.
 
-## Verificações
+## Verificação antes de publicar
 
 ```sh
+npm test
 npm run lint
 npm run build
+npm run check:release
+npm audit
 ```
 
-O lint executa o Oxlint. O build verifica os tipos com TypeScript em modo estrito
-e gera a versão de produção em `dist/`.
+`npm test` usa Node e SDK oficial com respostas simuladas; o teste de interface
+usa Chrome/Edge headless com perfil temporário. Pode ser necessário permitir o
+navegador fora da sandbox. `RASTRO_TEST_BROWSER` define um executável Chromium;
+sem navegador, essa cobertura será ignorada e precisará ser executada antes da
+liberação. Os testes reais exigem opt-in e não fazem parte da comprovação local.
 
-Para servir o build localmente:
+`check:release` requer um build já gerado. Examina os arquivos locais e `dist/`
+procurando padrões conhecidos de segredos e fixtures. Não imprime conteúdo
+sensível, não consulta o banco e não substitui auditoria do histórico Git ou RLS.
 
 ```sh
 npm run preview
 ```
 
-Ainda não há uma suíte de testes automatizados configurada.
+O preview do Vite não aplica os cabeçalhos do `vercel.json`: a CSP e os demais
+cabeçalhos também precisam ser conferidos no ambiente hospedado.
 
-## Estrutura
+## Segurança e limites
 
-```text
-src/
-  app.tsx       # Componente raiz que renderiza a página atual
-  index.css     # Entrada do Tailwind CSS
-  main.tsx      # Inicialização do React com StrictMode
-  pages/
-    welcome.tsx # Tela temporária existente de teste do Tailwind
-index.html      # Documento HTML em português do Brasil
-vite.config.ts  # Plugins React e Tailwind
-tsconfig*.json  # Configuração TypeScript do frontend e do Vite
-.oxlintrc.json  # Regras de lint
-```
+A proteção é feita pelo estado de autenticação, inclusive ao abrir os hashes
+`#visao-geral`, `#transacoes` e `#categorias` diretamente. Cada serviço valida a
+sessão, usa a identidade autenticada e confere respostas. A chave pública e a
+proteção visual não substituem as políticas RLS. A auditoria real deve cobrir
+`profiles`, `transactions`, `categories`, `investment_totals` e quaisquer outros
+objetos expostos pela Data API, incluindo o legado `investments`.
 
-Os arquivos e pastas usam nomes em minúsculas; os componentes React mantêm
-nomes em PascalCase, como `App` e `Welcome`.
+O SDK gerencia armazenamento e renovação de sessão; logout encerra a sessão
+neste navegador. Gravações com resposta incerta exigem conferir os dados antes
+de repetir. Não há retry automático de escrita nem garantia de snapshot entre
+várias consultas simultâneas. O dashboard ainda lê o histórico completo e requer
+avaliação de desempenho com volume representativo.
 
-`pages/` contém as telas da aplicação. As pastas `components/`, `layouts/`,
-`services/`, `hooks/`, `types/` e `utils/` serão criadas quando houver,
-respectivamente, elementos reutilizáveis, estruturas compartilhadas de tela,
-comunicação com serviços, hooks próprios, tipos compartilhados e funções
-utilitárias. Nenhuma delas é necessária nesta etapa.
+Recuperação de senha, reenvio de confirmação e gestão de conta ainda dependem
+de definição de escopo e configuração de Auth. Não existem ações fictícias para
+esses fluxos. A campanha de investimentos `security/stage9`, seus bloqueios e
+`migration-v2` continuam preservados e não são executados pelo build ou deploy.
 
-## Configuração e segurança
+## Publicar na Vercel
 
-Esta etapa não exige variáveis de ambiente. Na integração com Supabase, será
-criado um `.env.example` apenas com os valores públicos necessários, sem
-credenciais reais. Arquivos `.env` e suas variantes já estão no `.gitignore`,
-com exceção de `.env.example`.
+1. Conclua os bloqueios do [relatório](docs/auditoria-v1.md). Revise os arquivos a
+   versionar: o diretório já tinha muitas alterações e arquivos não rastreados.
+   Este trabalho não fez commit ou push. O repositório remoto precisa conter o
+   código revisado antes de ser importado na Vercel.
+2. Importe o repositório na Vercel, selecione a raiz deste projeto, framework
+   **Vite** e **Node.js 24.x**. `vercel.json` define instalação `npm ci`, build
+   `npm run build` e saída `dist`.
+3. Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` nas variáveis
+   do projeto. Separe Preview e Production; prefira Supabase de homologação
+   no Preview. Alterações exigem novo build.
+4. No Supabase Auth, revise **Site URL**, autorize a URL HTTPS exata de retorno
+   em **Redirect URLs** e confirme **Confirm email**, SMTP e limites de envio.
+   Não altere tabelas ou políticas por este procedimento.
+5. Os cabeçalhos incluem CSP, proteção contra iframe, política de referência,
+   MIME sniffing e restrição de câmera/microfone/localização. A CSP permite
+   Supabase hospedado em `*.supabase.co`. Se usar domínio próprio do Supabase,
+   acrescente apenas sua origem HTTPS/WSS em `connect-src` e valide novamente.
+   A navegação é por hash; não requer rewrites de rotas.
+6. Faça o deploy manualmente após aprovação das verificações. Teste login,
+   confirmação de e-mail, atualização da página, logout, CRUD, investimentos e
+   isolamento entre contas de teste. Confira os cabeçalhos e ausência de violações
+   CSP nas telas públicas e privadas, em desktop e celular real.
 
-Variáveis com prefixo `VITE_` são expostas ao navegador. Nunca coloque chaves
-privilegiadas, como `service_role`, no frontend. O acesso aos dados deverá
-respeitar as políticas RLS existentes.
+A configuração segue as referências oficiais da
+[Vercel](https://vercel.com/docs/project-configuration/vercel-json), de
+[Node.js na Vercel](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions),
+de [chaves públicas do Supabase](https://supabase.com/docs/guides/getting-started/api-keys)
+e de [URLs de retorno](https://supabase.com/docs/guides/auth/redirect-urls).
 
-## Versionamento
+## Documentação preservada
 
-Antes de cada marco, execute lint e build e revise os arquivos que entrarão no
-commit. `node_modules/`, `dist/` e arquivos de ambiente não devem ser enviados.
-Commits e push serão feitos mediante autorização do responsável pelo projeto.
+- [Auditoria e checklist de liberação](docs/auditoria-v1.md)
+- [Histórico do frontend](docs/historico-frontend.md): cópia integral do README
+  anterior, com descrições de etapas antigas; não descreve o estado atual.
+- [Auditoria anterior de RLS](security/rls-validation.md)
+- [Gerenciamento de categorias](security/category-management.md)
+- [Gerenciamento de transações](security/transaction-management.md)
+- [Campanha de investimentos preservada](security/stage9/README.md)

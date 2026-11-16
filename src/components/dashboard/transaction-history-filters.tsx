@@ -1,0 +1,19 @@
+import type { Category } from '../../types/category.ts'
+import type { HistoryFilters } from '../../utils/transaction-history.ts'
+import { monthRange } from '../../utils/transaction-history.ts'
+
+const field = 'min-h-12 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20'
+type Props = { filters: HistoryFilters; categories: Category[]; mode: string; search: string; onSearch: (value: string) => void; onChange: (patch: Partial<HistoryFilters>) => void; onMode: (value: string) => void; onClear: () => void }
+export default function TransactionHistoryFilters({ filters, categories, mode, search, onSearch, onChange, onMode, onClear }: Props) {
+  return <section aria-label="Pesquisar e filtrar transações" className="mb-5 rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="sm:col-span-2"><label htmlFor="history-search" className="mb-2 block text-sm font-medium">Pesquisar</label><input id="history-search" type="search" value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Buscar transações..." maxLength={120} className={field} /></div>
+      <div><label htmlFor="history-type" className="mb-2 block text-sm font-medium">Tipo</label><select id="history-type" value={filters.type} onChange={(event) => onChange({ type: event.target.value as HistoryFilters['type'], categoryId: '' })} className={field}><option value="all">Todas</option><option value="income">Receitas</option><option value="expense">Despesas</option></select></div>
+      <div><label htmlFor="history-category" className="mb-2 block text-sm font-medium">Categoria</label><select id="history-category" value={filters.categoryId} onChange={(event) => onChange({ categoryId: event.target.value })} className={field}><option value="">Todas as categorias</option><option value="none">Sem categoria</option>{categories.filter((category) => filters.type === 'all' || category.type === filters.type).map((category) => <option key={category.id} value={category.id}>{category.name}{category.userId === null ? ' · Global' : ''}</option>)}</select></div>
+      <div><label htmlFor="history-period" className="mb-2 block text-sm font-medium">Período</label><select id="history-period" value={mode} onChange={(event) => { const value = event.target.value; onMode(value); if (value !== 'custom') onChange(monthRange(value === 'previous')) }} className={field}><option value="current">Mês atual</option><option value="previous">Mês anterior</option><option value="custom">Período personalizado</option></select></div>
+      {mode === 'custom' && <><div><label htmlFor="history-start" className="mb-2 block text-sm font-medium">Data inicial</label><input id="history-start" type="date" min="0001-01-01" max="9999-12-31" value={filters.start} onChange={(event) => onChange({ start: event.target.value })} className={field} /></div><div><label htmlFor="history-end" className="mb-2 block text-sm font-medium">Data final</label><input id="history-end" type="date" min="0001-01-01" max="9999-12-31" value={filters.end} onChange={(event) => onChange({ end: event.target.value })} className={field} /></div></>}
+      <div><label htmlFor="history-order" className="mb-2 block text-sm font-medium">Ordenação</label><select id="history-order" value={filters.ascending ? 'oldest' : 'newest'} onChange={(event) => onChange({ ascending: event.target.value === 'oldest' })} className={field}><option value="newest">Mais recentes</option><option value="oldest">Mais antigas</option></select></div>
+      <div className="flex items-end"><button type="button" onClick={onClear} className="min-h-12 rounded-lg px-3 text-sm font-semibold text-emerald-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-emerald-600">Limpar filtros</button></div>
+    </div>
+  </section>
+}

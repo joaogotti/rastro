@@ -3,13 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": { "node": "24.x" },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "test": "node --experimental-strip-types --test tests/*.test.ts tests/*.test.mjs",
+    "check:release": "node --experimental-strip-types scripts/check-release.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "@tailwindcss/vite": "^4.3.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
